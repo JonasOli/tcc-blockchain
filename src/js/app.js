@@ -1,64 +1,120 @@
 App = {
   web3Provider: null,
   contracts: {},
+  account: '0x0',
+  hasVoted: false,
 
   init: function() {
-    // Load pets.
-    $.getJSON('../pets.json', function(data) {
-      var petsRow = $('#petsRow');
-      var petTemplate = $('#petTemplate');
-
-      for (i = 0; i < data.length; i ++) {
-        petTemplate.find('.panel-title').text(data[i].name);
-        petTemplate.find('img').attr('src', data[i].picture);
-        petTemplate.find('.pet-breed').text(data[i].breed);
-        petTemplate.find('.pet-age').text(data[i].age);
-        petTemplate.find('.pet-location').text(data[i].location);
-        petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
-
-        petsRow.append(petTemplate.html());
-      }
-    });
-
     return App.initWeb3();
   },
 
   initWeb3: function() {
-    /*
-     * Replace me...
-     */
-
+    // TODO: refactor conditional
+    if (typeof web3 !== 'undefined') {
+      // If a web3 instance is already provided by Meta Mask.
+      App.web3Provider = web3.currentProvider;
+      web3 = new Web3(web3.currentProvider);
+    } else {
+      // Specify default instance if no web3 instance provided
+      App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
+      web3 = new Web3(App.web3Provider);
+    }
     return App.initContract();
   },
 
   initContract: function() {
-    /*
-     * Replace me...
-     */
+    $.getJSON("Aluno.json", function(aluno) {
+      // Instantiate a new truffle contract from the artifact
+      App.contracts.Aluno = TruffleContract(aluno);
+      // Connect provider to interact with contract
+      App.contracts.Aluno.setProvider(App.web3Provider);
 
-    return App.bindEvents();
+      //App.listenForEvents();
+
+      return App.render();
+    });
   },
 
-  bindEvents: function() {
-    $(document).on('click', '.btn-adopt', App.handleAdopt);
+  /*// Listen for events emitted from the contract
+  listenForEvents: function() {
+    App.contracts.Aluno.deployed().then(function(instance) {
+      // Restart Chrome if you are unable to receive this event
+      // This is a known issue with Metamask
+      // https://github.com/MetaMask/metamask-extension/issues/2393
+      instance.votedEvent({}, {
+        fromBlock: 0,
+        toBlock: 'latest'
+      }).watch(function(error, event) {
+        console.log("event triggered", event)
+        // Reload when a new vote is recorded
+        App.render();
+      });
+    });
+  },*/
+
+  render: function() {
+    var alunoInstance;
+    var loader = $("#loader");
+    var content = $("#content");
+
+    loader.show();
+    content.hide();
+
+    // Load account data
+    web3.eth.getCoinbase(function(err, account) {
+      if (err === null) {
+        App.account = account;
+        $("#accountAddress").html("Your Account: " + account);
+      }
+    });
+
+    // Load contract data
+    App.contracts.Aluno.deployed().then(function(instance) {
+      alunoInstance = instance;
+      return alunoInstance.contAlunos();
+    }).then(function(contAlunos) {
+      var alunosTabela = $("#alunosTabela");
+      alunosTabela.empty();
+
+      //var candidatesSelect = $('#candidatesSelect');
+      //candidatesSelect.empty();
+
+      for (var i = 1; i <= contAlunos; i++) {
+        alunoInstance.alunos(i).then(function(aluno) {
+          var id = aluno[0];
+          var nome = aluno[1];
+          var matricula = aluno[2];
+          var nota = aluno[3];
+          var situacao = aluno[4];
+
+          // Render candidate Result
+          var templateAlunos = "<tr><th>" + id + "</th><td>" + nome + "</td><td>" + matricula + "</td><td>" + nota + "</td><td>" + situacao + "</td></tr>"
+          alunosTabela.append(templateAlunos);
+
+          // Render candidate ballot option
+          //var candidateOption = "<option value='" + id + "' >" + name + "</ option>"
+          //candidatesSelect.append(candidateOption);
+        });
+      }
+      loader.hide();
+      content.show();
+    }).catch(function(error) {
+      console.warn(error);
+    });
   },
 
-  markAdopted: function(adopters, account) {
-    /*
-     * Replace me...
-     */
-  },
-
-  handleAdopt: function(event) {
-    event.preventDefault();
-
-    var petId = parseInt($(event.target).data('id'));
-
-    /*
-     * Replace me...
-     */
-  }
-
+  /*castVote: function() {
+    var candidateId = $('#candidatesSelect').val();
+    App.contracts.Election.deployed().then(function(instance) {
+      return instance.vote(candidateId, { from: App.account });
+    }).then(function(result) {
+      // Wait for votes to update
+      $("#content").hide();
+      $("#loader").show();
+    }).catch(function(err) {
+      console.error(err);
+    });
+  }*/
 };
 
 $(function() {
