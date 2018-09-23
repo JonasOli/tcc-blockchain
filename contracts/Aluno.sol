@@ -7,6 +7,7 @@ contract Aluno {
         string nome;
         string matricula;
         string nota;
+        string situacao;
     }
 
     // buscar alunos
@@ -16,12 +17,12 @@ contract Aluno {
     uint public contAlunos;
 
     constructor () public {
-        addAluno("Jonas", "11515710", "85");
-        addAluno("Hugo", "11111111", "100");
+        addAluno("João", "11515710", "62", "Reprovado");
+        addAluno("Maria", "11111111", "86", "Aprovado");
     }
 
-    function addAluno (string _nome, string _matricula, string _nota) private {
+    function addAluno (string _nome, string _matricula, string _nota, string _situacao) private {
         contAlunos++;
-        alunos[contAlunos] = aluno(contAlunos, _nome, _matricula, _nota);
+        alunos[contAlunos] = aluno(contAlunos, _nome, _matricula, _nota, _situacao);
     }
 }
