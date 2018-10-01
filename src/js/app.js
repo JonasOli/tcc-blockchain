@@ -88,7 +88,9 @@ App = {
           var situacao = aluno[4];
 
           // Render candidate Result
-          var templateAlunos = "<tr><th>" + id + "</th><td>" + nome + "</td><td>" + matricula + "</td><td>" + nota + "</td><td>" + situacao + "</td></tr>"
+          var templateAlunos = "<tr><th>" + id + "</th><td>" + nome + "</td><td>" + matricula 
+          + "</td><td>" + nota + "</td><td>" + situacao + "</td><td> <button type='button' id='" + id 
+          + "' class='editar' onclick='Editar(" + id + ")'>Editar</button> </td></tr>";
           alunosTabela.append(templateAlunos);
 
           // Render candidate ballot option
@@ -101,21 +103,12 @@ App = {
     }).catch(function(error) {
       console.warn(error);
     });
-  },
-
-  /*castVote: function() {
-    var candidateId = $('#candidatesSelect').val();
-    App.contracts.Election.deployed().then(function(instance) {
-      return instance.vote(candidateId, { from: App.account });
-    }).then(function(result) {
-      // Wait for votes to update
-      $("#content").hide();
-      $("#loader").show();
-    }).catch(function(err) {
-      console.error(err);
-    });
-  }*/
+  }
 };
+
+function Editar(id) {
+  document.location = 'editar.html';
+}
 
 $(function() {
   $(window).load(function() {
