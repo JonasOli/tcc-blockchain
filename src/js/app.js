@@ -108,6 +108,7 @@ App = {
 
 function Editar(id) {
   document.location = 'editar.html';
+  document.cookie = id;
 }
 
 $(function() {
