@@ -27,7 +27,7 @@ contract Aluno {
         addAluno("Maria", "11111111", "86", "Aprovado");
     }
 
-    function addAluno (string _nome, string _matricula, string _nota, string _situacao) private {
+    function addAluno (string _nome, string _matricula, string _nota, string _situacao) public {
         contAlunos++;
         alunos[contAlunos] = aluno(contAlunos, _nome, _matricula, _nota, _situacao);
     }

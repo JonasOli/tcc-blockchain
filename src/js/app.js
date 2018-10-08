@@ -35,23 +35,6 @@ App = {
 		});
 	},
 
-	/*// Listen for events emitted from the contract
-	listenForEvents: function() {
-	  App.contracts.Aluno.deployed().then(function(instance) {
-	    // Restart Chrome if you are unable to receive this event
-	    // This is a known issue with Metamask
-	    // https://github.com/MetaMask/metamask-extension/issues/2393
-	    instance.votedEvent({}, {
-	      fromBlock: 0,
-	      toBlock: 'latest'
-	    }).watch(function(error, event) {
-	      console.log("event triggered", event)
-	      // Reload when a new vote is recorded
-	      App.render();
-	    });
-	  });
-	},*/
-
 	render: function () {
 		var alunoInstance;
 		var loader = $("#loader");
@@ -108,8 +91,6 @@ App = {
 		var nota = $("#nota").val();
 		var situacao = $("#situacao").val();
 
-		console.log(id + nome + matricula + nota + situacao);
-		
 		App.contracts.Aluno.deployed().then(function (instance) {
 			return instance.editar(id, nome, matricula, nota, situacao, {
 				from: App.account
@@ -119,13 +100,30 @@ App = {
 		});
 
 		document.location = 'index.html';
-		document.cookie = null;		
+		document.cookie = null;
+	},
+
+	adicionarAluno: function () {
+		var nome = $("#nome").val();
+		var matricula = $("#matricula").val();
+		var nota = $("#nota").val();
+		var situacao = $("#situacao").val();
+
+		App.contracts.Aluno.deployed().then(function (instance) {
+			return instance.addAluno(nome, matricula, nota, situacao);
+		}).catch(function (err) {
+			console.error(err);
+		});
 	}
 };
 
 function Editar(id) {
 	document.location = 'editar.html';
 	document.cookie = id;
+}
+
+function Adicionar() {
+	document.location = "adicionar.html";
 }
 
 $(function () {
