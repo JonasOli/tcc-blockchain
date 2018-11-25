@@ -110,7 +110,9 @@ App = {
 		var situacao = $("#situacao").val();
 
 		App.contracts.Aluno.deployed().then(function (instance) {
-			return instance.addAluno(nome, matricula, nota, situacao);
+			return instance.addAluno(nome, matricula, nota, situacao, {
+				from: App.account
+			});
 		}).catch(function (err) {
 			console.error(err);
 		});
