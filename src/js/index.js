@@ -25,15 +25,14 @@ instanciaContract.contAlunos((err, res) => {
 
         for (var i = 1; i <= contAlunos; i++) {
             instanciaContract.alunos(i, (err, res) => {
-                if (!err) {                    
-                    var id = i;
+                if (!err) {
 					var nome = res[1];
 					var matricula = res[2];
 					var nota = res[3];
 					var situacao = res[4];
                     
 					// Render candidate Result
-					var templateAlunos = "<tr><th>" + id + "</th><td>" + nome + "</td><td>" + matricula +
+					var templateAlunos = "<tr><td>" + nome + "</td><td>" + matricula +
 						"</td><td>" + nota + "</td><td>" + situacao + "</td></tr>";
 					alunosTabela.append(templateAlunos);
                 } else {
