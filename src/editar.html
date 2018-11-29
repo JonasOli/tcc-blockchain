@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Editar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
+
 <body>
     <h1 align="center">Editar aluno</h1>
-    <form id="CamposEditar" onSubmit="App.editarAluno(); return false;">
+    <form id="CamposEditar" onSubmit="editarAluno(); return false;">
         <h4>Nome:</h4>
         <input type="text" name="nome" id="nome" value=""><br>
         <h4>Matricula:</h4>
@@ -25,4 +27,8 @@
 <script src="js/web3.min.js"></script>
 <script src="js/truffle-contract.js"></script>
 <script src="js/app.js"></script>
+<script>
+    window.onload = mostraDados();
+</script>
+
 </html>

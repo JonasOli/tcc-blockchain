@@ -40,7 +40,6 @@ contract Aluno {
         alunos[_id].nota = _nota;
         alunos[_id].situacao = _situacao;
 
-        // trigger voted event
         emit eventoEditar(_id);
     }
 }

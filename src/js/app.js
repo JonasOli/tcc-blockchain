@@ -1,153 +1,117 @@
-App = {
-	web3Provider: null,
-	contracts: {},
-	account: '0x0',
-	hasVoted: false,
+Web3 = require('web3');
 
-	init: function () {
-		return App.initWeb3();
-	},
+if (typeof web3 !== 'undefined') {
+	// If a web3 instance is already provided by Meta Mask.
+	web3 = new Web3(web3.currentProvider);
+} else {
+	// Specify default instance if no web3 instance provided
+	web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io'));
+}
 
-	initWeb3: function () {
-		// TODO: refactor conditional
-		if (typeof web3 !== 'undefined') {
-			// If a web3 instance is already provided by Meta Mask.
-			App.web3Provider = web3.currentProvider;
-			web3 = new Web3(web3.currentProvider);
-		} else {
-			// Specify default instance if no web3 instance provided
-			App.web3Provider = new Web3.providers.HttpProvider('http://192.168.25.14:7545');
-			web3 = new Web3(App.web3Provider);
-		}
-		return App.initContract();
-	},
+// console.log(web3.isConnected());
+// console.log(web3.eth.accounts[0]);
 
-	initContract: function () {
-		$.getJSON("Aluno.json", function (aluno) {
-			// Instantiate a new truffle contract from the artifact
-			App.contracts.Aluno = TruffleContract(aluno);
-			// Connect provider to interact with contract
-			App.contracts.Aluno.setProvider(App.web3Provider);
+abi = JSON.parse('[{"constant":false,"inputs":[{"name":"_nome","type":"string"},{"name":"_matricula","type":"string"},{"name":"_nota","type":"string"},{"name":"_situacao","type":"string"}],"name":"addAluno","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_id","type":"uint256"},{"name":"_nome","type":"string"},{"name":"_matricula","type":"string"},{"name":"_nota","type":"string"},{"name":"_situacao","type":"string"}],"name":"editar","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_id","type":"uint256"}],"name":"eventoEditar","type":"event"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"alunos","outputs":[{"name":"id","type":"uint256"},{"name":"nome","type":"string"},{"name":"matricula","type":"string"},{"name":"nota","type":"string"},{"name":"situacao","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"contAlunos","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"editores","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"}]');
+var alunoContract = web3.eth.contract(abi);
+instanciaContract = alunoContract.at('0x9ea39ecdcfd034b7228c633bb3b4b80b80ab823f');
 
-			//App.listenForEvents();
+//console.log(instanciaContract);
 
-			return App.render();
-		});
-	},
+var alunosTabela = $("#alunosTabela");
+var content = $("#content");
 
-	render: function () {
-		var alunoInstance;
-		var loader = $("#loader");
-		var content = $("#content");
+content.show();
 
-		loader.show();
-		content.hide();
+if (web3.eth.accounts[0] == "0x2e27c15d9f05d4872b6e09dbff01b8d194e312bd") {
+	var conta = "0x2e27c15d9f05d4872b6e09dbff01b8d194e312bd";
+}
 
-		// Load account data
-		web3.eth.getCoinbase(function (err, account) {
-			if (err === null) {
-				App.account = account;
-				$("#accountAddress").html("Your Account: " + account);
-			}
-		});
+instanciaContract.contAlunos((err, res) => {
+	if (!err) {
+		var contAlunos = res.c[0];
+		var templateAlunos;
 
-		// Load contract data
-		App.contracts.Aluno.deployed().then(function (instance) {
-			alunoInstance = instance;
-			return alunoInstance.contAlunos();
-		}).then(function (contAlunos) {
-			var alunosTabela = $("#alunosTabela");
-			alunosTabela.empty();
-
-			var camposEditar = $('#camposEditar');
-			camposEditar.empty();
-
-			for (var i = 1; i <= contAlunos; i++) {
-				alunoInstance.alunos(i).then(function (aluno) {
-					var id = aluno[0];
-					var nome = aluno[1];
-					var matricula = aluno[2];
-					var nota = aluno[3];
-					var situacao = aluno[4];
+		for (var i = 1; i <= contAlunos; i++) {
+			instanciaContract.alunos(i, (err, res) => {
+				if (!err) {
+					var id = res[0].c[0];
+					var nome = res[1];
+					var matricula = res[2];
+					var nota = res[3];
+					var situacao = res[4];
 
 					// Render candidate Result
-					var templateAlunos = "<tr><th>" + id + "</th><td>" + nome + "</td><td>" + matricula +
-						"</td><td>" + nota + "</td><td>" + situacao + "</td><td> <button type='button' id='" + id +
-						"' class='editar' onclick='Editar(" + id + ")'>Editar</button> </td></tr>";
+					templateAlunos = "<tr><td>" + nome + "</td><td>" + matricula +
+						"</td><td>" + nota + "</td><td>" + situacao + "</td>" +
+						"<td><button class='idAluno' type='button' onclick='Editar(" + id + ")'>Editar</button></td>" +
+						"</tr>";
 					alunosTabela.append(templateAlunos);
-				});
-			}
-			loader.hide();
-			content.show();
-		}).catch(function (error) {
-			console.warn(error);
-		});
-	},
-
-	editarAluno: function () {
-		var id = document.cookie;
-		var nome = $("#nome").val();
-		var matricula = $("#matricula").val();
-		var nota = $("#nota").val();
-		var situacao = $("#situacao").val();
-
-		App.contracts.Aluno.deployed().then(function (instance) {
-			return instance.editar(id, nome, matricula, nota, situacao, {
-				from: App.account
-			});
-		}).catch(function (err) {
-			console.error(err);
-		});
-
-		document.location = 'index.html';
-		document.cookie = null;
-	},
-
-	adicionarAluno: function () {
-		var nome = $("#nome").val();
-		var matricula = $("#matricula").val();
-		var nota = $("#nota").val();
-		var situacao = $("#situacao").val();
-
-		App.contracts.Aluno.deployed().then(function (instance) {
-			return instance.addAluno(nome, matricula, nota, situacao, {
-				from: App.account
-			});
-		}).catch(function (err) {
-			console.error(err);
-		});
-	},
-
-	adicionarTeste: function () {
-		$.getJSON("js/Alunos_json.json", (data) => {
-			$.each(data, (key, val) => {
-				var situacao;
-				if (val.Nota < 70) {
-					situacao = 'Reprovado';
 				} else {
-					situacao = 'Aprovado';
-				}
-				App.contracts.Aluno.deployed().then(function (instance) {
-					return instance.addAluno(val.Nomes, val.Matricula.toString(), val.Nota.toString(), situacao);
-				}).catch(function (err) {
 					console.error(err);
-				});
+				}
 			});
-		});
+		}
+	} else {
+		console.error(err);
 	}
-};
+});
+
+function adicionaAluno() {
+	var nome = $("#nome").val();
+	var matricula = $("#matricula").val();
+	var nota = $("#nota").val();
+	var situacao = $("#situacao").val();
+	instanciaContract.addAluno(nome, matricula, nota, situacao, { from: conta }, (err) => {
+		if (!err) {
+			document.location = "index.html";
+		} else {
+			console.error(err);
+		}
+	});
+	document.location = "index.html"
+}
+
+function editarAluno() {
+	var id = document.cookie;
+	var nome = $("#nome").val();
+	var matricula = $("#matricula").val();
+	var nota = $("#nota").val();
+	var situacao = $("#situacao").val();
+
+	instanciaContract.editar(id, nome, matricula, nota, situacao, { from: conta }, (err) => {
+		if (!err) {
+			document.location = "index.html";
+		} else {
+			console.error(err);
+		}
+	});
+}
 
 function Editar(id) {
-	document.location = 'editar.html';
+	document.location = "editar.html";
 	document.cookie = id;
+}
+
+function mostraDados() {
+	var id = document.cookie;
+
+	instanciaContract.alunos(id, (err, res) => {
+		if (!err) {
+			var nome = res[1];
+			var matricula = res[2];
+			var nota = res[3];
+			var situacao = res[4];
+
+			$("#nome").val(nome);
+			$("#matricula").val(matricula);
+			$("#nota").val(nota);
+			$("#situacao").val(situacao);
+		} else {
+			console.error(err);
+		}
+	});
 }
 
 function Adicionar() {
 	document.location = "adicionar.html";
 }
-
-$(function () {
-	$(window).load(function () {
-		App.init();
-	});
-});
